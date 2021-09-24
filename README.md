@@ -2,13 +2,13 @@
 
 TOLL Token : 
 
-Address : 0x9A2af686fFaFf9B10C8B800c2261155ca9D3c5c2
+Address : 0xB107ffeb0E27ee45d375A26F6F6b8A9f1cdB6701
 
-BSC contract code : https://bscscan.com/address/0x9A2af686fFaFf9B10C8B800c2261155ca9D3c5c2#code
+BSC contract code : https://bscscan.com/address/0xB107ffeb0E27ee45d375A26F6F6b8A9f1cdB6701#code
 
 TOLL Masterchef : 
 
-Address : 0x2bBF361a58730EbE67592770e99792722Ff4cFF9
+Address : 0x92ee0Fa5736847ddAAE686382fb72D54F3006330
 
-BSC contract code : https://bscscan.com/address/0x2bBF361a58730EbE67592770e99792722Ff4cFF9#code
+BSC contract code : https://bscscan.com/address/0x92ee0Fa5736847ddAAE686382fb72D54F3006330#code
 

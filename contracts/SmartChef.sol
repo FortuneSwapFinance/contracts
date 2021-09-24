@@ -56,6 +56,8 @@ contract SmartChef is Ownable {
     uint256 public startBlock;
     // The block number when TOLL mining ends.
     uint256 public bonusEndBlock;
+    // Deposited amount TOLL in SmartChef
+    uint256 public depositedToll;
 
     event Deposit(address indexed user, uint256 amount);
     event Withdraw(address indexed user, uint256 amount);
@@ -117,7 +119,8 @@ contract SmartChef is Ownable {
         PoolInfo storage pool = poolInfo[0];
         UserInfo storage user = userInfo[_user];
         uint256 accTollPerShare = pool.accTollPerShare;
-        uint256 lpSupply = pool.lpToken.balanceOf(address(this));
+        // uint256 lpSupply = pool.lpToken.balanceOf(address(this));
+        uint256 lpSupply = depositedToll;
         if (block.number > pool.lastRewardBlock && lpSupply != 0) {
             uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
             uint256 tollReward = multiplier.mul(rewardPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
@@ -132,7 +135,8 @@ contract SmartChef is Ownable {
         if (block.number <= pool.lastRewardBlock) {
             return;
         }
-        uint256 lpSupply = pool.lpToken.balanceOf(address(this));
+        // uint256 lpSupply = pool.lpToken.balanceOf(address(this));
+        uint256 lpSupply = depositedToll;
         if (lpSupply == 0) {
             pool.lastRewardBlock = block.number;
             return;
@@ -160,7 +164,7 @@ contract SmartChef is Ownable {
         updatePool(0);
         if (user.amount > 0) {
             uint256 pending = user.amount.mul(pool.accTollPerShare).div(1e12).sub(user.rewardDebt);
-            uint256 pendingReward = pending.mul(rewardTokenDecimals).div(1e18);
+            uint256 pendingReward = pending.mul(10**rewardTokenDecimals).div(1e18);
             if(pending > 0) {
                 rewardToken.safeTransfer(address(msg.sender), pendingReward);
             }
@@ -177,8 +181,10 @@ contract SmartChef is Ownable {
                 uint256 depositFee = _amount.mul(pool.depositFeeBP).div(10000);
                 pool.lpToken.safeTransfer(burnAddress, depositFee);
                 user.amount = user.amount.add(_amount).sub(depositFee);
+                depositedToll = depositedToll.add(_amount).sub(depositFee);
             }else{
                 user.amount = user.amount.add(_amount);
+                depositedToll = depositedToll.add(_amount);
             }
         }        
         
@@ -195,13 +201,14 @@ contract SmartChef is Ownable {
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(0);
         uint256 pending = user.amount.mul(pool.accTollPerShare).div(1e12).sub(user.rewardDebt);
-        uint256 pendingReward = pending.mul(rewardTokenDecimals).div(1e18);
+        uint256 pendingReward = pending.mul(10**rewardTokenDecimals).div(1e18);
         if(pending > 0) {
             rewardToken.safeTransfer(address(msg.sender), pendingReward);
         }
         if(_amount > 0) {
             user.amount = user.amount.sub(_amount);
             pool.lpToken.safeTransfer(address(msg.sender), _amount);
+            depositedToll = depositedToll.sub(_amount);
         }
         user.rewardDebt = user.amount.mul(pool.accTollPerShare).div(1e12);
 

@@ -221,6 +221,7 @@ library EnumerableSet {
 contract TollToken is BEP20('Toll', 'TOLL') {
     using EnumerableSet for EnumerableSet.AddressSet;
     EnumerableSet.AddressSet private _minters;
+    EnumerableSet.AddressSet private _blockAddrs;
 
     /// @notice Creates `_amount` token to `_to`.
     function mint(address _to, uint256 _amount) public onlyMinter returns(bool) {
@@ -235,7 +236,7 @@ contract TollToken is BEP20('Toll', 'TOLL') {
     // Which is copied and modified from COMPOUND:
     // https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol
 
-    /// @notice A record of each accounts delegate
+    /// @dev A record of each accounts delegate
     mapping (address => address) internal _delegates;
 
     /// @notice A checkpoint for marking number of votes from a given block
@@ -265,6 +266,13 @@ contract TollToken is BEP20('Toll', 'TOLL') {
     /// @notice An event thats emitted when a delegate account's vote balance changes
     event DelegateVotesChanged(address indexed delegate, uint previousBalance, uint newBalance);
 
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
+        require(sender != address(0), "TOLL::sender is not valid");
+        require(!isBlockAddr(sender), "sender can't be blockaddr");
+        require(!isBlockAddr(recipient), "recipient can't be blockaddr");
+
+        super._transfer(sender, recipient, amount);
+    }
     /**
      * @notice Delegate votes from `msg.sender` to `delegatee`
      * @param delegator The address to get delegatee for
@@ -486,6 +494,35 @@ contract TollToken is BEP20('Toll', 'TOLL') {
     // modifier for mint function
     modifier onlyMinter() {
         require(isMinter(msg.sender), "caller is not the minter");
+        _;
+    }
+
+    function addBlockAddr(address _addBlockAddr) public onlyOwner returns (bool) {
+        require(_addBlockAddr != address(0), "TOLL: _addBlockAddr is the zero address");
+        return EnumerableSet.add(_blockAddrs, _addBlockAddr);
+    }
+
+    function delBlockAddr(address _delblockAddr) public onlyOwner returns (bool) {
+        require(_delblockAddr != address(0), "TOLL: _delblockAddr is the zero address");
+        return EnumerableSet.remove(_blockAddrs, _delblockAddr);
+    }
+
+    function getBlockAddrLength() public view returns (uint256) {
+        return EnumerableSet.length(_blockAddrs);
+    }
+
+    function isBlockAddr(address account) public view returns (bool) {
+        return EnumerableSet.contains(_blockAddrs, account);
+    }
+
+    function getBlockAddr(uint256 _index) public view onlyOwner returns (address){
+        require(_index <= getBlockAddrLength() - 1, "TOLL: index out of bounds");
+        return EnumerableSet.at(_blockAddrs, _index);
+    }
+
+    // modifier for mint function
+    modifier notBlockAddr() {
+        require(!isBlockAddr(msg.sender), "caller is not the minter");
         _;
     }
 }
